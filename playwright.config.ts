@@ -8,8 +8,7 @@ export default defineConfig({
     ['allure-playwright']
   ],
   use: {
-   
-    headless: false,
+    headless: true,
     screenshot: 'on',
     trace : 'on',
     video: 'on',
