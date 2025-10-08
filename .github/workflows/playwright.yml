@@ -28,6 +28,10 @@ jobs:
       - name: Run Playwright tests
         run: npx playwright test --reporter=line
 
+      - name: Generate HTML report
+        if: always()
+        run: npx playwright show-report --output=playwright-report
+
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
