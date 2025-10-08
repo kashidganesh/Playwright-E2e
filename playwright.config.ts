@@ -4,8 +4,8 @@ export default defineConfig({
   timeout: 30000,
   retries: 1,
   reporter: [
-    ['html', { outputFolder: 'tests/reports/html-report', open: 'never' }],
-    ['allure-playwright']
+    ['list'],
+    ['html', { outputFolder: 'playwright-report', open: 'never' }],
   ],
   use: {
     headless: true,
