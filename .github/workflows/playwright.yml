@@ -47,3 +47,10 @@ jobs:
         with:
           name: playwright-report-${{ github.event.inputs.suite }}
           path: playwright-report/
+
+      - name: Upload Playwright trace
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-trace-${{ github.event.inputs.suite }}
+          path: test-results/   
