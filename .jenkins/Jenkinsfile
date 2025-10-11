@@ -18,14 +18,33 @@ pipeline {
             }
         }
 
-        stage('Run Tests') {
+        stage('Install Browsers') {
             steps {
-                bat 'npx playwright test'
+                bat 'npx playwright install'
             }
         }
 
-        stage('Archive Results') {
+        stage('Run Tests with Trace') {
             steps {
+                // Run tests with HTML report and trace enabled
+                bat 'npx playwright test --reporter=html --trace on'
+            }
+        }
+
+        stage('Publish HTML Report') {
+            steps {
+                // Publish Playwright HTML report in Jenkins
+                publishHTML(target: [
+                    reportDir: 'playwright-report/html',
+                    reportFiles: 'index.html',
+                    reportName: 'Playwright Test Report'
+                ])
+            }
+        }
+
+        stage('Archive Full Report') {
+            steps {
+                // Archive everything including traces
                 archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
             }
         }
