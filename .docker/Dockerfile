@@ -1,20 +1,18 @@
-# Use official Playwright image
-FROM mcr.microsoft.com/playwright:v1.48.0-jammy
+# Dockerfile
+FROM mcr.microsoft.com/playwright:focal
 
-# Set working directory
-WORKDIR /app
+# set workdir
+WORKDIR /usr/src/app
 
-# Copy package files first (for caching)
-COPY package*.json ./
+# copy package files first for caching
+COPY package.json package-lock.json ./
+RUN npm ci --unsafe-perm
 
-# Install dependencies
-RUN npm ci
-
-# Copy the rest of the project
+# copy code
 COPY . .
 
-# Run Playwright install (to ensure browsers are available)
-RUN npx playwright install --with-deps
+# build if any build step (ts)
+RUN npm run build || echo "no build script"
 
-# Default command (you can override in Jenkins)
-CMD ["npx", "playwright", "test"]
+# default command runs tests
+CMD ["npx", "playwright", "test", "--reporter=html"]

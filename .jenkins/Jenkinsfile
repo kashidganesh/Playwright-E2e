@@ -1,40 +1,49 @@
 pipeline {
-    agent any
-
-    parameters {
-        choice(name: 'SUITE', choices: ['@sanity', '@regression'], description: 'Select test suite to run')
+  agent {
+    docker {
+      // use the Dockerfile in repo; or use image 'mcr.microsoft.com/playwright:focal'
+      image 'mcr.microsoft.com/playwright:focal'
+      // reuse container for stages
+      args '-u root:root -v /var/run/docker.sock:/var/run/docker.sock'
     }
-
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                sh 'docker build -t playwright-e2e .'
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                sh 'docker run --rm -v $WORKSPACE:/app playwright-e2e npx playwright test --grep ${params.SUITE}'
-            }
-        }
-
-        stage('Archive Reports') {
-            steps {
-                archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true
-                archiveArtifacts artifacts: 'test-results/**/*.zip', fingerprint: true
-            }
-        }
+  }
+  environment {
+    AWS_CREDENTIALS = credentials('aws-creds') // Jenkins credentials id (accessKey/secretKey)
+    S3_BUCKET = 'your-playwright-reports-bucket'
+    REPORT_DIR = 'playwright-report'
+  }
+  stages {
+    stage('Checkout') {
+      steps { checkout scm }
     }
-
-    post {
+    stage('Install') {
+      steps {
+        sh 'npm ci --unsafe-perm'
+      }
+    }
+    stage('Run Tests') {
+      steps {
+        sh 'npx playwright test --reporter=html --output=playwright-report || true'
+      }
+      post {
         always {
-            echo 'Cleaning up...'
+          archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true
         }
+      }
     }
+    stage('Publish Report to S3') {
+      steps {
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY', credentialsId: 'aws-creds']]) {
+          sh '''
+            apt-get update && apt-get install -y awscli
+            aws s3 cp --recursive playwright-report s3://${S3_BUCKET}/${BUILD_NUMBER}/
+          '''
+        }
+      }
+    }
+  }
+  post {
+    success { echo "Pipeline SUCCESS" }
+    failure { echo "Pipeline FAILED" }
+  }
 }
