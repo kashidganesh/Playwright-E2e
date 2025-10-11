@@ -1,49 +1,60 @@
 pipeline {
-  agent {
-    docker {
-      // use the Dockerfile in repo; or use image 'mcr.microsoft.com/playwright:focal'
-      image 'mcr.microsoft.com/playwright:focal'
-      // reuse container for stages
-      args '-u root:root -v /var/run/docker.sock:/var/run/docker.sock'
+    agent any
+
+    tools {
+        nodejs "Node18"
     }
-  }
-  environment {
-    AWS_CREDENTIALS = credentials('aws-creds') // Jenkins credentials id (accessKey/secretKey)
-    S3_BUCKET = 'your-playwright-reports-bucket'
-    REPORT_DIR = 'playwright-report'
-  }
-  stages {
-    stage('Checkout') {
-      steps { checkout scm }
+
+    environment {
+        REPORT_DIR = "playwright-report"
     }
-    stage('Install') {
-      steps {
-        sh 'npm ci --unsafe-perm'
-      }
-    }
-    stage('Run Tests') {
-      steps {
-        sh 'npx playwright test --reporter=html --output=playwright-report || true'
-      }
-      post {
-        always {
-          archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/kashidganesh/Playwright-E2e.git'
+            }
         }
-      }
-    }
-    stage('Publish Report to S3') {
-      steps {
-        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY', credentialsId: 'aws-creds']]) {
-          sh '''
-            apt-get update && apt-get install -y awscli
-            aws s3 cp --recursive playwright-report s3://${S3_BUCKET}/${BUILD_NUMBER}/
-          '''
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm ci'
+            }
         }
-      }
+
+        stage('Install Browsers') {
+            steps {
+                sh 'npx playwright install --with-deps'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                // Replace with your test command if different
+                sh 'npx playwright test --reporter=html'
+            }
+        }
+
+        stage('Publish Report') {
+            steps {
+                publishHTML(target: [
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: "${REPORT_DIR}",
+                    reportFiles: 'index.html',
+                    reportName: 'Playwright Report'
+                ])
+            }
+        }
     }
-  }
-  post {
-    success { echo "Pipeline SUCCESS" }
-    failure { echo "Pipeline FAILED" }
-  }
+
+    post {
+        success {
+            echo "✅ Playwright Tests Passed!"
+        }
+        failure {
+            echo "❌ Tests Failed!"
+        }
+    }
 }
