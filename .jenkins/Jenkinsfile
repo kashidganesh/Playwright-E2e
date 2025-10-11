@@ -18,18 +18,25 @@ pipeline {
             }
         }
 
-        stage('Run Tests') {
+        stage('Install Browsers') {
             steps {
-                bat 'npx playwright test'
+                bat 'npx playwright install'
             }
         }
 
-        stage('Archive Results') {
+        stage('Run Tests with Trace') {
             steps {
+                // Run tests with HTML report and tracing enabled
+                bat 'npx playwright test --reporter=html --trace on'
+            }
+        }
+
+        stage('Archive Full Report & Traces') {
+            steps {
+                // Archive the entire Playwright report folder, including traces
                 archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
             }
         }
-        
     }
 
     post {
