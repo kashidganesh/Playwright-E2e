@@ -24,10 +24,10 @@ pipeline {
             }
         }
 
-        stage('Run Tests with Trace') {
+        stage('Run Tests with Trace & HTML Report') {
             steps {
-                // Run tests with HTML report and trace enabled
-                bat 'npx playwright test --reporter=html --trace on'
+                // Run tests with HTML reporter, trace enabled, and set output folder
+                bat 'npx playwright test --reporter=html --trace on --output=playwright-report/html'
             }
         }
 
