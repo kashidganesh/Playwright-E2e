@@ -5,56 +5,35 @@ pipeline {
         nodejs "Node18"
     }
 
-    environment {
-        REPORT_DIR = "playwright-report"
-    }
-
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/kashidganesh/Playwright-E2e.git'
+                git branch: 'main', url: 'https://github.com/kabat idganebat/Playwright-E2e.git'
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm ci'
-            }
-        }
-
-        stage('Install Browsers') {
-            steps {
-                sh 'npx playwright install --with-deps'
+                bat 'npm install'
             }
         }
 
         stage('Run Tests') {
             steps {
-                // Replace with your test command if different
-                sh 'npx playwright test --reporter=html'
+                bat 'npx playwright test'
             }
         }
 
-        stage('Publish Report') {
+        stage('Archive Results') {
             steps {
-                publishHTML(target: [
-                    allowMissing: false,
-                    alwaysLinkToLastBuild: true,
-                    keepAll: true,
-                    reportDir: "${REPORT_DIR}",
-                    reportFiles: 'index.html',
-                    reportName: 'Playwright Report'
-                ])
+                archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
             }
         }
     }
 
     post {
-        success {
-            echo "✅ Playwright Tests Passed!"
-        }
-        failure {
-            echo "❌ Tests Failed!"
+        always {
+            echo 'Pipeline completed.'
         }
     }
 }
