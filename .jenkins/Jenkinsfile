@@ -36,15 +36,24 @@ pipeline {
             steps {
                 script {
                     echo "Running ${params.TEST_SUITE} test suite..."
-                    // Run Playwright test based on the selected suite
                     bat "npx playwright test --grep @${params.TEST_SUITE} --reporter=html --trace on"
                 }
             }
         }
 
-        stage('Archive Full Report & Traces') {
+        stage('Zip Trace Files') {
             steps {
-                archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
+                bat '''
+                if exist playwright-report\\trace (
+                    powershell Compress-Archive -Path playwright-report\\trace\\* -DestinationPath playwright-report\\trace.zip -Force
+                )
+                '''
+            }
+        }
+
+        stage('Archive Only Required Reports') {
+            steps {
+                archiveArtifacts artifacts: 'playwright-report/index.html, playwright-report/trace.zip', allowEmptyArchive: true
             }
         }
     }
