@@ -51,10 +51,11 @@ pipeline {
             }
         }
 
-        stage('Archive Full Folder Silently') {
+        stage('Archive Placeholder') {
             steps {
-                // Archive, but Jenkins won’t list individual files if pattern doesn't directly match them
-                archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true, allowEmptyArchive: true, onlyIfSuccessful: true
+                // Create an empty folder to ensure only the "Build Artifacts" header is visible
+                bat 'mkdir artifacts_placeholder'
+                archiveArtifacts artifacts: 'artifacts_placeholder/**', allowEmptyArchive: true
             }
         }
     }
