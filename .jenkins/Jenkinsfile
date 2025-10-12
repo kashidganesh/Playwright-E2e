@@ -34,14 +34,16 @@ pipeline {
 
         stage('Run Tests with Trace') {
             steps {
-                // Run tests with HTML report and tracing enabled
-                bat 'npx playwright test --reporter=html --trace on'
+                script {
+                    echo "Running ${params.TEST_SUITE} test suite..."
+                    // Run only the selected suite using tags
+                    bat "npx playwright test --grep @${params.TEST_SUITE} --reporter=html --trace on"
+                }
             }
         }
 
         stage('Archive Full Report & Traces') {
             steps {
-                // Archive the entire Playwright report folder, including traces
                 archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
             }
         }
