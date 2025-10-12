@@ -34,28 +34,15 @@ pipeline {
 
         stage('Run Tests with Trace') {
             steps {
-                script {
-                    echo "Running ${params.TEST_SUITE} test suite..."
-                    bat "npx playwright test --grep @${params.TEST_SUITE} --reporter=html --trace on"
-                }
+                // Run tests with HTML report and tracing enabled
+                bat 'npx playwright test --reporter=html --trace on'
             }
         }
 
-        stage('Zip Trace Files') {
+        stage('Archive Full Report & Traces') {
             steps {
-                bat '''
-                if exist playwright-report\\trace (
-                    powershell Compress-Archive -Path playwright-report\\trace\\* -DestinationPath playwright-report\\trace.zip -Force
-                )
-                '''
-            }
-        }
-
-        stage('Archive Placeholder') {
-            steps {
-                // Create an empty folder to ensure only the "Build Artifacts" header is visible
-                bat 'mkdir artifacts_placeholder'
-                archiveArtifacts artifacts: 'artifacts_placeholder/**', allowEmptyArchive: true
+                // Archive the entire Playwright report folder, including traces
+                archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
             }
         }
     }
