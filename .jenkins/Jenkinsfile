@@ -51,9 +51,10 @@ pipeline {
             }
         }
 
-        stage('Archive Only Required Reports') {
+        stage('Archive Full Folder Silently') {
             steps {
-                archiveArtifacts artifacts: 'playwright-report/index.html, playwright-report/trace.zip', allowEmptyArchive: true
+                // Archive, but Jenkins won’t list individual files if pattern doesn't directly match them
+                archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true, allowEmptyArchive: true, onlyIfSuccessful: true
             }
         }
     }
