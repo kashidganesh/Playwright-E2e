@@ -1,1 +1,1 @@
-Playwright + TypeScript + Report + Jenkins + Docker project
+Playwright + TypeScript + Report + AWS + Jenkins Project
