@@ -28,7 +28,7 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
+                sh 'npm ci'
             }
         }
 
@@ -47,7 +47,7 @@ pipeline {
             }
         }
 
-        stage('Archive Full Report & Traces') {
+        stage('Archive Reports') {
             steps {
                 archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
             }
