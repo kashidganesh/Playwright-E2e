@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs "Node20"
+        nodejs "Node18"
     }
 
     parameters {
@@ -14,12 +14,6 @@ pipeline {
     }
 
     stages {
-        stage('Clean Workspace') {
-            steps {
-                cleanWs()
-            }
-        }
-
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/kashidganesh/Playwright-E2e.git'
@@ -28,13 +22,13 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm ci'
+                bat 'npm install'
             }
         }
 
         stage('Install Browsers') {
             steps {
-                sh 'npx playwright install'
+                bat 'npx playwright install'
             }
         }
 
@@ -42,12 +36,13 @@ pipeline {
             steps {
                 script {
                     echo "Running ${params.TEST_SUITE} test suite..."
-                    sh "npx playwright test --grep @${params.TEST_SUITE} --reporter=html --trace on"
+                    // Run only the selected suite using tags
+                    bat "npx playwright test --grep @${params.TEST_SUITE} --reporter=html --trace on"
                 }
             }
         }
 
-        stage('Archive Reports') {
+        stage('Archive Full Report & Traces') {
             steps {
                 archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
             }
