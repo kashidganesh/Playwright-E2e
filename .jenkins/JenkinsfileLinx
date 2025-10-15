@@ -1,0 +1,57 @@
+pipeline {
+    agent any
+
+    tools {
+        nodejs "Node18"
+    }
+
+    parameters {
+        choice(
+            name: 'TEST_SUITE',
+            choices: ['sanity', 'regression'],
+            description: 'Select which test suite to run'
+        )
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/kashidganesh/Playwright-E2e.git'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+        stage('Install Browsers') {
+            steps {
+                sh 'npx playwright install'
+            }
+        }
+
+        stage('Run Tests with Trace') {
+            steps {
+                script {
+                    echo "Running ${params.TEST_SUITE} test suite..."
+                    // Run only the selected suite using tags
+                    sh "npx playwright test --grep @${params.TEST_SUITE} --reporter=html --trace on"
+                }
+            }
+        }
+
+        stage('Archive Full Report & Traces') {
+            steps {
+                archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline completed.'
+        }
+    }
+}
